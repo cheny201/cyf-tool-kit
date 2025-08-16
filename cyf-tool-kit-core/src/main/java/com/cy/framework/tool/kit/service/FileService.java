@@ -30,7 +30,7 @@ public class FileService {
     @Autowired
     private FileInfoService fileInfoService;
 
-    public int readDir(String deviceName,String path,String excludeDirs) throws Exception {
+    public int readDir(String deviceName,String path,String excludeDirs,boolean md5) throws Exception {
         File dir = new File(path);
         Assert.isTrue(dir.exists(),"路径不存在");
         Assert.isTrue(dir.isDirectory(),"此路径不是文件夹");
@@ -38,6 +38,7 @@ public class FileService {
         List<File> fileLs = Lists.newArrayList();
         FileVisitor<Path> visitor = getFileVisitor(excludeDirs,fileLs);
         FileUtil.walkFiles(dir.toPath(), visitor);
+        visitor.toString();
 
         List<FileInfo> saveLs = fileLs.stream().map(v->{
             FileInfo f = new FileInfo();
@@ -45,7 +46,9 @@ public class FileService {
             f.setFileType(FileUtil.getSuffix(v));
             f.setDeviceName(deviceName);
             f.setAbsolutePath(v.getAbsolutePath());
-//            f.setMd5(DigestUtil.md5Hex(v));
+            if(md5){
+                f.setMd5(DigestUtil.md5Hex(v));
+            }
             f.setFileSize(v.length());
             f.setProcessName(v.getParentFile().getName());
             f.setUpdateUserId("");
@@ -59,8 +62,19 @@ public class FileService {
         Set<String> excludeDirsSet = StringUtils.isNotBlank(excludeDirs) ? Arrays.stream(excludeDirs.split(",")).map(String::toLowerCase).collect(Collectors.toSet()) : Sets.newHashSet();
         // 创建安全的文件访问器
         FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
-
             int processed = 0, skipped = 0;
+
+            @Override
+            public String toString() {
+                log.error("处理成功:{}个,失败:{}个",processed,skipped);
+                return super.toString();
+            }
+
+            /**
+             * 判定是否是系统文件
+             * @param file
+             * @return
+             */
             private boolean isSystemProtected(File file) {
                 String name = file.getName().toLowerCase();
                 return name.equals("system volume information") ||
