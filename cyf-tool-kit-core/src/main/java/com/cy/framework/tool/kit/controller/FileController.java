@@ -29,8 +29,9 @@ public class FileController {
     public RestResultDTO<String> readDir(@Parameter(description = "目录")@RequestParam String path,
                                          @Parameter(description = "设备名称") @RequestParam(required = false) String deviceName,
                                          @Parameter(description = "排除的目录名称（使用逗号分隔）")@RequestParam(required = false) String excludeDirs,
+                                         @Parameter(description = "是否需要清空记录")@RequestParam(defaultValue = "false") Boolean clean,
                                          @Parameter(description = "是否需要计算md5值")@RequestParam(defaultValue = "false") Boolean md5) throws Exception {
-        int size = service.readDir(deviceName,path,excludeDirs,md5);
+        int size = service.readDir(deviceName,path,excludeDirs,clean,md5);
         return RestResultDTO.newSuccess("读取文件数:"+size,"操作成功");
     }
 

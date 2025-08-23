@@ -2,18 +2,18 @@ package com.cy.framework.tool.kit.service;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cy.framework.tool.kit.domain.FileInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -30,7 +29,18 @@ public class FileService {
     @Autowired
     private FileInfoService fileInfoService;
 
-    public int readDir(String deviceName,String path,String excludeDirs,boolean md5) throws Exception {
+    /**
+     * 读取目录中的文件
+     * @param deviceName
+     * @param path
+     * @param excludeDirs
+     * @param clean
+     * @param md5
+     * @return
+     * @throws Exception
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public int readDir(String deviceName,String path,String excludeDirs,boolean clean,boolean md5) throws Exception {
         File dir = new File(path);
         Assert.isTrue(dir.exists(),"路径不存在");
         Assert.isTrue(dir.isDirectory(),"此路径不是文件夹");
@@ -50,10 +60,12 @@ public class FileService {
                 f.setMd5(DigestUtil.md5Hex(v));
             }
             f.setFileSize(v.length());
-            f.setProcessName(v.getParentFile().getName());
-            f.setUpdateUserId("");
+            f.setParentDir(v.getParentFile().getName());
             return f;
         }).collect(Collectors.toList());
+        if(clean){
+            fileInfoService.remove(Wrappers.lambdaQuery(FileInfo.class).eq(FileInfo::getDeviceName,deviceName));
+        }
         fileInfoService.saveBatch(saveLs);
         return saveLs.size();
     }

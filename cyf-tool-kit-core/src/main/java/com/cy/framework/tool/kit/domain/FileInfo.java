@@ -23,6 +23,8 @@ import javax.persistence.Index;
 public class FileInfo extends BaseModel {
     public final static String TABLE_NAME = Constant.TABLE_PREFIX+"file_info";
 
+    @Column(columnDefinition = "varchar(100) COMMENT '电影记录ID'")
+    private String movieId;
     @Column(columnDefinition = "varchar(500) COMMENT '文件名'")
     private String fileName;
     @Column(columnDefinition = "varchar(100) COMMENT '文件类型'")
@@ -35,8 +37,10 @@ public class FileInfo extends BaseModel {
     private String md5;
     @Column(columnDefinition = "bigint(11) COMMENT '文件大小'")
     private Long fileSize;
-    @Column(columnDefinition = "varchar(500) COMMENT '处理后的文件名'")
-    private String processName;
+    @Column(columnDefinition = "varchar(500) COMMENT '父级目录'")
+    private String parentDir;
+    @Column(columnDefinition = "varchar(500) COMMENT '描述'")
+    private String description;
 
 
 }
